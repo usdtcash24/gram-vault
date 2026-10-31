@@ -11,6 +11,7 @@
             --accent-cyan: #38bdf8;
             --accent-blue: #0284c7;
             --text-dim: #64748b;
+            --card-bg: rgba(15, 23, 42, 0.85);
         }
         * {
             box-sizing: border-box;
@@ -20,7 +21,7 @@
         }
         body {
             margin: 0;
-            padding: 24px 16px;
+            padding: 20px 16px;
             background-color: var(--bg-color);
             color: #ffffff;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -33,7 +34,7 @@
         }
         .header {
             text-align: center;
-            margin-top: 10px;
+            margin-top: 5px;
         }
         .title {
             font-size: 18px;
@@ -47,30 +48,40 @@
             color: var(--accent-cyan);
             margin-top: 4px;
         }
+        .user-badge {
+            margin-top: 6px;
+            font-size: 11px;
+            font-family: monospace;
+            color: #a5f3fc;
+            background: rgba(56, 189, 248, 0.12);
+            padding: 3px 8px;
+            border-radius: 6px;
+            display: inline-block;
+            border: 1px solid rgba(56, 189, 248, 0.25);
+        }
         .crystal-container {
             position: relative;
-            width: 240px;
-            height: 240px;
+            width: 220px;
+            height: 220px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
         }
         .crystal-svg {
-            width: 170px;
-            height: 170px;
+            width: 160px;
+            height: 160px;
             filter: drop-shadow(0 0 25px rgba(56, 189, 248, 0.45));
             transition: transform 0.08s ease;
         }
         .crystal-svg:active {
-            transform: scale(0.94);
+            transform: scale(0.92);
         }
         .counter-section {
             text-align: center;
-            margin-bottom: 10px;
         }
         .shards-amount {
-            font-size: 34px;
+            font-size: 36px;
             font-weight: 800;
             letter-spacing: 0.5px;
             color: #ffffff;
@@ -83,33 +94,115 @@
             letter-spacing: 2px;
             margin-top: 4px;
         }
-        .progress-container {
+        .actions-container {
             width: 100%;
             max-width: 340px;
-            margin-bottom: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 10px;
         }
-        .progress-btn {
+        .btn-primary {
             width: 100%;
             background: linear-gradient(180deg, #0284c7 0%, #0369a1 100%);
             border: 1px solid rgba(56, 189, 248, 0.5);
             border-radius: 12px;
-            padding: 14px;
+            padding: 13px;
             text-align: center;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 700;
             letter-spacing: 1px;
             color: #ffffff;
-            box-shadow: 0 0 20px rgba(2, 132, 199, 0.3);
+            box-shadow: 0 0 16px rgba(2, 132, 199, 0.25);
+            cursor: pointer;
+        }
+        .btn-deposit {
+            background: linear-gradient(180deg, #10b981 0%, #047857 100%);
+            border-color: rgba(52, 211, 153, 0.5);
+            box-shadow: 0 0 16px rgba(16, 185, 129, 0.25);
         }
         .stats-bar {
             width: 100%;
             max-width: 340px;
             display: flex;
             justify-content: space-between;
-            font-size: 12px;
+            font-size: 11px;
             color: var(--text-dim);
             font-family: monospace;
             padding: 0 4px;
+        }
+        /* Modal for Deposit */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 20px;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-card {
+            background: var(--card-bg);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 350px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .modal-title {
+            font-size: 16px;
+            font-weight: 800;
+            text-align: center;
+            color: var(--accent-cyan);
+            letter-spacing: 1px;
+        }
+        .wallet-item {
+            background: rgba(10, 15, 26, 0.8);
+            border: 1px solid rgba(56, 189, 248, 0.15);
+            border-radius: 10px;
+            padding: 10px;
+        }
+        .wallet-name {
+            font-size: 11px;
+            color: #94a3b8;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .wallet-addr {
+            font-size: 10px;
+            font-family: monospace;
+            word-break: break-all;
+            color: #ffffff;
+            margin-bottom: 6px;
+        }
+        .btn-copy {
+            background: rgba(56, 189, 248, 0.15);
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            color: #38bdf8;
+            padding: 5px 10px;
+            font-size: 10px;
+            font-weight: 700;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+        }
+        .btn-close {
+            background: #334155;
+            border: none;
+            color: #ffffff;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -117,6 +210,7 @@
     <div class="header">
         <div class="title">GRAM:</div>
         <div class="subtitle">THE GENESIS VAULT</div>
+        <div class="user-badge" id="nodeBadge">NODE: CHECKING...</div>
     </div>
 
     <div class="crystal-container" id="crystalBtn">
@@ -130,42 +224,143 @@
     </div>
 
     <div class="counter-section">
-        <div class="shards-amount" id="shardCounter">1,482,900</div>
+        <div class="shards-amount" id="shardCounter">0</div>
         <div class="shards-label">GRAM SHARDS</div>
     </div>
 
-    <div class="progress-container">
-        <div class="progress-btn">DECRYPTION: 68%</div>
+    <div class="actions-container">
+        <div class="btn-primary" id="decryptBtn">DECRYPTION: ACTIVE</div>
+        <div class="btn-primary btn-deposit" id="openDepositBtn">⚡ VAULT DEPOSIT / BOOST</div>
     </div>
 
     <div class="stats-bar">
-        <span>NODE: ONLINE</span>
+        <span id="syncStatus">SYNC: CLOUD OK</span>
         <span id="energyCounter">ENERGY: 2000 / 2000</span>
     </div>
 
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-        tg.ready();
+    <!-- Deposit Modal -->
+    <div class="modal" id="depositModal">
+        <div class="modal-card">
+            <div class="modal-title">SUPPORT & BOOST VAULT</div>
+            
+            <div class="wallet-item">
+                <div class="wallet-name">TON / USDT (TON CHAIN):</div>
+                <div class="wallet-addr" id="tonAddr">UQAN_placeholder_ton_address_genesis_vault</div>
+                <button class="btn-copy" onclick="copyWallet('tonAddr')">COPY TON ADDRESS</button>
+            </div>
 
-        let shards = 1482900;
+            <div class="wallet-item">
+                <div class="wallet-name">USDT (TRC-20):</div>
+                <div class="wallet-addr" id="trcAddr">TX_placeholder_usdt_trc20_address_genesis</div>
+                <button class="btn-copy" onclick="copyWallet('trcAddr')">COPY USDT (TRC-20)</button>
+            </div>
+
+            <button class="btn-close" id="closeDepositBtn">CLOSE</button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "https://gram-vault-api.onrender.com";
+        const tg = window.Telegram ? window.Telegram.WebApp : null;
+        if (tg) {
+            tg.expand();
+            tg.ready();
+        }
+
+        const user = tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user : { id: 777000, first_name: "Operator" };
+        let shards = 0;
         let energy = 2000;
+        let multiplier = 1.0;
+        let pendingClicks = 0;
+
         const shardEl = document.getElementById('shardCounter');
         const energyEl = document.getElementById('energyCounter');
+        const badgeEl = document.getElementById('nodeBadge');
         const crystal = document.getElementById('crystalBtn');
+        const syncStatusEl = document.getElementById('syncStatus');
 
-        crystal.addEventListener('pointerdown', (e) => {
+        // Modal Controls
+        const depositModal = document.getElementById('depositModal');
+        document.getElementById('openDepositBtn').addEventListener('click', () => depositModal.classList.add('active'));
+        document.getElementById('closeDepositBtn').addEventListener('click', () => depositModal.classList.remove('active'));
+
+        function copyWallet(id) {
+            const text = document.getElementById(id).innerText;
+            navigator.clipboard.writeText(text);
+            if (tg && tg.showPopup) {
+                tg.showPopup({ message: "Address copied to clipboard!" });
+            } else {
+                alert("Copied!");
+            }
+        }
+
+        // Загрузка начальных данных из Render API
+        async function loadUserData() {
+            try {
+                const res = await fetch(`${API_URL}/api/user/${user.id}`);
+                const data = await res.json();
+                shards = data.shards;
+                energy = data.energy;
+                multiplier = data.multiplier;
+                shardEl.innerText = shards.toLocaleString();
+                energyEl.innerText = `ENERGY: ${energy} / 2000`;
+                badgeEl.innerText = `${data.tier} (${multiplier}x)`;
+            } catch (err) {
+                badgeEl.innerText = "LOCAL NODE // OFFLINE";
+            }
+        }
+
+        // Синхронизация кликов с сервером
+        async function syncClicks() {
+            if (pendingClicks === 0) return;
+            const toSend = pendingClicks;
+            pendingClicks = 0;
+            syncStatusEl.innerText = "SYNC: SAVING...";
+
+            try {
+                await fetch(`${API_URL}/api/sync`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: user.id,
+                        username: user.username || user.first_name || "",
+                        added_shards: toSend,
+                        current_energy: energy
+                    })
+                });
+                syncStatusEl.innerText = "SYNC: CLOUD OK";
+            } catch (e) {
+                pendingClicks += toSend;
+                syncStatusEl.innerText = "SYNC: RETRYING...";
+            }
+        }
+
+        setInterval(syncClicks, 2500);
+
+        // Регенерация энергии
+        setInterval(() => {
+            if (energy < 2000) {
+                energy = Math.min(2000, energy + 2);
+                energyEl.innerText = `ENERGY: ${energy} / 2000`;
+            }
+        }, 1500);
+
+        crystal.addEventListener('pointerdown', () => {
             if (energy <= 0) return;
-            shards += 1;
+            const gained = Math.round(1 * multiplier);
+            shards += gained;
             energy -= 1;
-            
+            pendingClicks += gained;
+
             shardEl.innerText = shards.toLocaleString();
             energyEl.innerText = `ENERGY: ${energy} / 2000`;
 
-            if (tg.HapticFeedback) {
+            if (tg && tg.HapticFeedback) {
                 tg.HapticFeedback.impactOccurred('light');
             }
         });
+
+        loadUserData();
     </script>
 </body>
 </html>
