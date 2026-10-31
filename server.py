@@ -40,6 +40,8 @@ def init_db():
             tier TEXT DEFAULT 'MODERN',
             multiplier REAL DEFAULT 1.0,
             has_autoclicker INTEGER DEFAULT 0,
+            referred_by INTEGER DEFAULT NULL,
+            referrals_count INTEGER DEFAULT 0,
             last_sync TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
@@ -75,34 +77,44 @@ def calc_tier(user_id: int):
     return "MODERN NODE", 1.0
 
 @app.get("/api/user/{user_id}")
-def get_user(user_id: int):
+def get_user(user_id: int, ref: int = None):
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
     cur.execute("""
-        SELECT shards, energy, max_energy, regen_speed, tier, multiplier, has_autoclicker 
+        SELECT shards, energy, max_energy, regen_speed, tier, multiplier, has_autoclicker, referrals_count 
         FROM users WHERE user_id = ?
     """, (user_id,))
     row = cur.fetchone()
-    conn.close()
 
     if not row:
         tier, mult = calc_tier(user_id)
-        conn = sqlite3.connect(DB_PATH)
-        cur = conn.cursor()
-        cur.execute("""
-            INSERT INTO users (user_id, shards, energy, max_energy, regen_speed, tier, multiplier, has_autoclicker) 
-            VALUES (?, 0, 2000, 2000, 2, ?, ?, 0)
-        """, (user_id, tier, mult))
-        conn.commit()
-        conn.close()
-        return {
-            "user_id": user_id, "shards": 0, "energy": 2000, "max_energy": 2000,
-            "regen_speed": 2, "tier": tier, "multiplier": mult, "has_autoclicker": 0
-        }
+        start_shards = 0
+        ref_by = None
 
+        if ref and ref != user_id:
+            cur.execute("SELECT user_id FROM users WHERE user_id = ?", (ref,))
+            if cur.fetchone():
+                ref_by = ref
+                start_shards = 5000
+                cur.execute("UPDATE users SET shards = shards + 5000, referrals_count = referrals_count + 1 WHERE user_id = ?", (ref,))
+
+        cur.execute("""
+            INSERT INTO users (user_id, shards, energy, max_energy, regen_speed, tier, multiplier, has_autoclicker, referred_by, referrals_count) 
+            VALUES (?, ?, 2000, 2000, 2, ?, ?, 0, ?, 0)
+        """, (user_id, start_shards, tier, mult, ref_by))
+        conn.commit()
+        
+        cur.execute("""
+            SELECT shards, energy, max_energy, regen_speed, tier, multiplier, has_autoclicker, referrals_count 
+            FROM users WHERE user_id = ?
+        """, (user_id,))
+        row = cur.fetchone()
+
+    conn.close()
     return {
         "user_id": user_id, "shards": row[0], "energy": row[1], "max_energy": row[2],
-        "regen_speed": row[3], "tier": row[4], "multiplier": row[5], "has_autoclicker": row[6]
+        "regen_speed": row[3], "tier": row[4], "multiplier": row[5], "has_autoclicker": row[6],
+        "referrals_count": row[7]
     }
 
 @app.post("/api/sync")
@@ -125,7 +137,6 @@ async def verify_ton_payment(data: VerifyPayload):
 
     expected_comment = f"upg_{data.upgrade_type}_{data.user_id}"
 
-    # Запрашиваем последние 15 транзакций кошелька через открытый API toncenter
     async with httpx.AsyncClient() as client:
         try:
             res = await client.get(
@@ -134,45 +145,34 @@ async def verify_ton_payment(data: VerifyPayload):
                 timeout=10.0
             )
             res_data = res.json()
-        except Exception as e:
-            raise HTTPException(status_code=502, detail="Failed to connect to TON network")
+        except Exception:
+            raise HTTPException(status_code=502, detail="Blockchain query failed")
 
     if not res_data.get("ok"):
-        raise HTTPException(status_code=502, detail="TON API response error")
+        raise HTTPException(status_code=502, detail="TON API error")
 
-    transactions = res_data.get("result", [])
     matched_tx = None
-
-    for tx in transactions:
+    for tx in res_data.get("result", []):
         in_msg = tx.get("in_msg", {})
         msg_data = in_msg.get("message", "")
-        value_nano = int(in_msg.get("value", 0))
-        value_ton = value_nano / 1e9
+        value_ton = int(in_msg.get("value", 0)) / 1e9
 
-        # Сверяем комментарий и сумму (допускаем погрешность в пределах комиссии)
         if expected_comment in msg_data and value_ton >= (expected_price * 0.98):
-            tx_id = tx.get("transaction_id", {}).get("hash")
-            matched_tx = (tx_id, value_ton)
+            matched_tx = (tx.get("transaction_id", {}).get("hash"), value_ton)
             break
 
     if not matched_tx:
-        raise HTTPException(
-            status_code=404, 
-            detail="Транзакция пока не подтверждена блокчейном. Подождите 10-15 секунд."
-        )
+        raise HTTPException(status_code=404, detail="Транзакция еще не подтверждена сетью.")
 
     tx_hash, confirmed_amount = matched_tx
-
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
 
-    # Проверка на повторное использование той же транзакции
     cur.execute("SELECT tx_hash FROM processed_txs WHERE tx_hash = ?", (tx_hash,))
     if cur.fetchone():
         conn.close()
-        raise HTTPException(status_code=400, detail="Эта транзакция уже была активирована!")
+        raise HTTPException(status_code=400, detail="Транзакция уже использована!")
 
-    # Применяем улучшение
     if data.upgrade_type == "battery":
         cur.execute("UPDATE users SET max_energy = max_energy + 2000 WHERE user_id = ?", (data.user_id,))
     elif data.upgrade_type == "charge":
@@ -188,8 +188,7 @@ async def verify_ton_payment(data: VerifyPayload):
     )
     conn.commit()
     conn.close()
-
-    return {"status": "success", "upgrade": data.upgrade_type, "tx_hash": tx_hash}
+    return {"status": "success", "upgrade": data.upgrade_type}
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
