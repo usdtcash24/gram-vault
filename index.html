@@ -2,147 +2,259 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <title>GRAM: THE GENESIS VAULT</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700;800&family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #060b11;
-            --accent-cyan: #38bdf8;
-            --accent-blue: #0284c7;
-            --text-dim: #64748b;
-            --card-bg: rgba(15, 23, 42, 0.95);
+            --bg-dark: #04070d;
+            --accent-cyan: #00f2fe;
+            --accent-blue: #4facfe;
+            --neon-glow: rgba(0, 242, 254, 0.4);
+            --card-glass: rgba(10, 20, 35, 0.7);
+            --border-glass: rgba(0, 242, 254, 0.2);
         }
         * {
             box-sizing: border-box;
             user-select: none;
             -webkit-user-select: none;
-            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            margin: 0;
+            padding: 0;
         }
         body {
-            margin: 0;
-            padding: 16px;
-            background-color: var(--bg-color);
+            background: radial-gradient(circle at 50% 20%, #0c1a2e 0%, var(--bg-dark) 85%);
             color: #ffffff;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: space-between;
+            font-family: 'Chakra Petch', sans-serif;
             min-height: 100vh;
-            overflow: hidden;
-        }
-        .header {
-            text-align: center;
             display: flex;
             flex-direction: column;
             align-items: center;
-            width: 100%;
+            justify-content: space-between;
+            padding: 16px 20px;
+            overflow: hidden;
+            position: relative;
         }
+        /* Кибер-сетка на фоне */
+        body::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(0, 242, 254, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 242, 254, 0.03) 1px, transparent 1px);
+            background-size: 32px 32px;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 420px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            flex-grow: 1;
+        }
+        /* Top Navigation */
         .top-row {
+            width: 100%;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            width: 100%;
-            margin-bottom: 8px;
+            gap: 10px;
         }
-        .user-badge {
+        .tier-badge {
+            background: linear-gradient(135deg, rgba(0, 242, 254, 0.15), rgba(79, 172, 254, 0.05));
+            border: 1px solid var(--border-glass);
+            padding: 8px 12px;
+            border-radius: 12px;
+            font-family: 'JetBrains Mono', monospace;
             font-size: 11px;
-            font-family: monospace;
-            color: #a5f3fc;
-            background: rgba(56, 189, 248, 0.12);
-            padding: 4px 10px;
-            border-radius: 6px;
-            border: 1px solid rgba(56, 189, 248, 0.25);
+            font-weight: 700;
+            color: var(--accent-cyan);
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.1);
+            backdrop-filter: blur(8px);
+            letter-spacing: 0.5px;
         }
         #ton-connect-button {
-            height: 32px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 0 15px rgba(79, 172, 254, 0.2);
         }
-        .title {
+        /* Header Title */
+        .hero-title {
+            text-align: center;
+            margin-top: 10px;
+        }
+        .hero-title h1 {
             font-size: 18px;
             font-weight: 800;
-            letter-spacing: 1.5px;
+            letter-spacing: 2.5px;
+            color: #ffffff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
         }
-        .subtitle {
-            font-size: 13px;
-            letter-spacing: 2px;
+        .hero-title p {
+            font-size: 11px;
+            font-weight: 700;
             color: var(--accent-cyan);
+            letter-spacing: 3px;
             margin-top: 2px;
+            text-shadow: 0 0 8px var(--neon-glow);
         }
-        .crystal-container {
+        /* Crystal Area */
+        .crystal-wrapper {
             position: relative;
-            width: 220px;
-            height: 220px;
+            width: 240px;
+            height: 240px;
             display: flex;
             align-items: center;
             justify-content: center;
+            margin: 10px 0;
             cursor: pointer;
         }
-        .crystal-svg {
-            width: 160px;
-            height: 160px;
-            filter: drop-shadow(0 0 25px rgba(56, 189, 248, 0.45));
-            transition: transform 0.08s ease;
+        .crystal-glow {
+            position: absolute;
+            width: 180px;
+            height: 180px;
+            background: radial-gradient(circle, rgba(0, 242, 254, 0.3) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: pulse-glow 3s infinite ease-in-out;
+            pointer-events: none;
         }
-        .crystal-svg:active {
+        .crystal-img {
+            width: 170px;
+            height: 170px;
+            transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            filter: drop-shadow(0 0 25px rgba(0, 242, 254, 0.6));
+            animation: float-anim 4s infinite ease-in-out;
+        }
+        .crystal-wrapper:active .crystal-img {
             transform: scale(0.92);
         }
-        .counter-section {
+        /* Counter Section */
+        .score-box {
             text-align: center;
-        }
-        .shards-amount {
-            font-size: 38px;
-            font-weight: 800;
-            color: #ffffff;
-            text-shadow: 0 0 16px rgba(56, 189, 248, 0.3);
-        }
-        .shards-label {
-            font-size: 12px;
-            font-weight: 700;
-            color: #94a3b8;
-            letter-spacing: 2px;
-            margin-top: 4px;
-        }
-        .actions-container {
-            width: 100%;
-            max-width: 360px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
             margin-bottom: 8px;
         }
-        .btn-boost-store {
-            width: 100%;
-            background: linear-gradient(180deg, #0284c7 0%, #0369a1 100%);
-            border: 1px solid rgba(56, 189, 248, 0.5);
-            border-radius: 12px;
-            padding: 13px;
-            text-align: center;
-            font-size: 13px;
+        .score-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 42px;
             font-weight: 800;
-            letter-spacing: 1px;
-            color: #ffffff;
-            box-shadow: 0 0 16px rgba(2, 132, 199, 0.3);
-            cursor: pointer;
+            letter-spacing: -1px;
+            background: linear-gradient(180deg, #ffffff 40%, #b2ebf2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 15px rgba(0, 242, 254, 0.4));
         }
-        .stats-bar {
+        .score-lbl {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+        /* Click Float Text */
+        .tap-effect {
+            position: absolute;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 800;
+            font-size: 24px;
+            color: #ffffff;
+            text-shadow: 0 0 10px var(--accent-cyan);
+            pointer-events: none;
+            animation: tap-float 0.7s forwards ease-out;
+            z-index: 10;
+        }
+        /* Bottom Actions & Battery */
+        .bottom-section {
             width: 100%;
-            max-width: 360px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        /* Modern Neon Energy Bar */
+        .battery-card {
+            background: var(--card-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: 14px;
+            padding: 10px 14px;
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .battery-meta {
             display: flex;
             justify-content: space-between;
+            font-family: 'JetBrains Mono', monospace;
             font-size: 11px;
-            color: var(--text-dim);
-            font-family: monospace;
-            padding: 0 4px;
+            font-weight: 600;
+            color: #94a3b8;
+        }
+        .battery-meta span:last-child {
+            color: var(--accent-cyan);
+        }
+        .bar-shell {
+            width: 100%;
+            height: 8px;
+            background: rgba(15, 23, 42, 0.8);
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid rgba(0, 242, 254, 0.1);
+        }
+        .bar-fill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #0284c7, var(--accent-cyan));
+            box-shadow: 0 0 10px var(--accent-cyan);
+            border-radius: 6px;
+            transition: width 0.3s ease;
+        }
+        /* Hardware Lab Button */
+        .btn-lab {
+            width: 100%;
+            background: linear-gradient(135deg, #0284c7 0%, #00f2fe 100%);
+            border: none;
+            border-radius: 14px;
+            padding: 15px;
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 14px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            color: #04070d;
+            box-shadow: 0 4px 20px rgba(0, 242, 254, 0.35);
+            cursor: pointer;
+            transition: opacity 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-lab:active {
+            opacity: 0.85;
+        }
+        .status-sync {
+            text-align: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: #475569;
+            letter-spacing: 1px;
         }
         /* Modal UPGRADE STORE */
         .modal {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.88);
-            backdrop-filter: blur(10px);
+            background: rgba(2, 6, 12, 0.92);
+            backdrop-filter: blur(12px);
             align-items: center;
             justify-content: center;
             z-index: 100;
@@ -152,59 +264,62 @@
             display: flex;
         }
         .modal-card {
-            background: var(--card-bg);
-            border: 1px solid rgba(56, 189, 248, 0.35);
-            border-radius: 18px;
+            background: #091322;
+            border: 1px solid var(--border-glass);
+            border-radius: 20px;
             width: 100%;
             max-width: 380px;
             max-height: 85vh;
-            padding: 18px;
+            padding: 20px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 14px;
             overflow-y: auto;
+            box-shadow: 0 0 35px rgba(0, 242, 254, 0.15);
+        }
+        .modal-card::-webkit-scrollbar {
+            display: none;
         }
         .modal-title {
-            font-size: 15px;
+            font-size: 16px;
             font-weight: 800;
             text-align: center;
             color: var(--accent-cyan);
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
         }
         .upgrade-card {
-            background: rgba(10, 15, 26, 0.85);
-            border: 1px solid rgba(56, 189, 248, 0.18);
-            border-radius: 12px;
-            padding: 12px;
+            background: rgba(14, 27, 45, 0.7);
+            border: 1px solid rgba(0, 242, 254, 0.15);
+            border-radius: 14px;
+            padding: 12px 14px;
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 8px;
         }
         .up-head {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .up-title {
             font-size: 13px;
             font-weight: 700;
             color: #ffffff;
+            display: flex;
+            justify-content: space-between;
         }
         .up-desc {
             font-size: 11px;
             color: #94a3b8;
+            line-height: 1.4;
         }
         .up-buttons {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 8px;
-            margin-top: 6px;
+            margin-top: 4px;
         }
         .btn-buy {
-            background: rgba(56, 189, 248, 0.12);
-            border: 1px solid rgba(56, 189, 248, 0.35);
-            color: #a5f3fc;
-            padding: 7px;
+            background: rgba(0, 242, 254, 0.1);
+            border: 1px solid rgba(0, 242, 254, 0.35);
+            color: var(--accent-cyan);
+            font-family: 'JetBrains Mono', monospace;
+            padding: 8px;
             font-size: 11px;
             font-weight: 700;
             border-radius: 8px;
@@ -212,124 +327,177 @@
             text-align: center;
         }
         .btn-buy-stars {
-            border-color: rgba(251, 191, 36, 0.5);
+            border-color: rgba(251, 191, 36, 0.4);
             color: #fbbf24;
             background: rgba(251, 191, 36, 0.1);
         }
         .btn-close {
-            background: #334155;
+            background: #1e293b;
             border: none;
             color: #ffffff;
-            padding: 10px;
-            border-radius: 10px;
+            padding: 12px;
+            border-radius: 12px;
             font-size: 12px;
             font-weight: 700;
+            letter-spacing: 1px;
             cursor: pointer;
-            margin-top: 6px;
+            margin-top: 4px;
+        }
+
+        /* Animations */
+        @keyframes float-anim {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(1.5deg); }
+        }
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 0.85; transform: scale(1.15); }
+        }
+        @keyframes tap-float {
+            0% { opacity: 1; transform: translateY(0px) scale(1); }
+            100% { opacity: 0; transform: translateY(-70px) scale(1.2); }
         }
     </style>
 </head>
 <body>
-    <div class="header">
+    <div class="container">
+        <!-- Top Stats Row -->
         <div class="top-row">
-            <div class="user-badge" id="nodeBadge">NODE: CHECKING...</div>
+            <div class="tier-badge" id="nodeBadge">INITIALIZING...</div>
             <div id="ton-connect-button"></div>
         </div>
-        <div class="title">GRAM:</div>
-        <div class="subtitle">THE GENESIS VAULT</div>
-    </div>
 
-    <div class="crystal-container" id="crystalBtn">
-        <svg class="crystal-svg" viewBox="0 0 100 140" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <polygon points="50,5 90,40 90,100 50,135 10,100 10,40" stroke="#38bdf8" stroke-width="2.5" fill="rgba(56, 189, 248, 0.05)"/>
-            <polygon points="50,5 65,40 65,100 50,135 35,100 35,40" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="2 1"/>
-            <line x1="10" y1="40" x2="90" y2="40" stroke="#38bdf8" stroke-width="1.5"/>
-            <line x1="10" y1="100" x2="90" y2="100" stroke="#38bdf8" stroke-width="1.5"/>
-            <line x1="50" y1="5" x2="50" y2="135" stroke="#38bdf8" stroke-width="2"/>
-        </svg>
-    </div>
+        <!-- Title -->
+        <div class="hero-title">
+            <h1>GRAM: PROTOCOL</h1>
+            <p>GENESIS RECOVERY VAULT</p>
+        </div>
 
-    <div class="counter-section">
-        <div class="shards-amount" id="shardCounter">0</div>
-        <div class="shards-label">GRAM SHARDS</div>
-    </div>
+        <!-- 3D Neon Crystal -->
+        <div class="crystal-wrapper" id="crystalBtn">
+            <div class="crystal-glow"></div>
+            <!-- Рендеренный киберпанк-кристалл с мягкими гранями и отражением -->
+            <svg class="crystal-img" viewBox="0 0 120 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="facetA" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#00f2fe" stop-opacity="0.8"/>
+                        <stop offset="100%" stop-color="#0284c7" stop-opacity="0.2"/>
+                    </linearGradient>
+                    <linearGradient id="facetB" x1="100%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9"/>
+                        <stop offset="100%" stop-color="#00f2fe" stop-opacity="0.3"/>
+                    </linearGradient>
+                    <linearGradient id="facetC" x1="50%" y1="0%" x2="50%" y2="100%">
+                        <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.6"/>
+                        <stop offset="100%" stop-color="#0c4a6e" stop-opacity="0.7"/>
+                    </linearGradient>
+                </defs>
+                <!-- Top Cap Facets -->
+                <polygon points="60,10 95,45 60,60" fill="url(#facetB)"/>
+                <polygon points="60,10 25,45 60,60" fill="url(#facetA)"/>
+                <!-- Central Body Facets -->
+                <polygon points="25,45 60,60 60,110 25,95" fill="url(#facetC)"/>
+                <polygon points="95,45 60,60 60,110 95,95" fill="url(#facetA)"/>
+                <!-- Bottom Tip Facets -->
+                <polygon points="25,95 60,110 60,150" fill="url(#facetA)"/>
+                <polygon points="95,95 60,110 60,150" fill="url(#facetB)"/>
+                <!-- Neon Glowing Wireframe Overlays -->
+                <polygon points="60,10 95,45 95,95 60,150 25,95 25,45" stroke="#00f2fe" stroke-width="2" fill="none"/>
+                <line x1="60" y1="10" x2="60" y2="150" stroke="#ffffff" stroke-width="1.5" stroke-opacity="0.7"/>
+                <line x1="25" y1="45" x2="95" y2="45" stroke="#00f2fe" stroke-width="1" stroke-dasharray="3 2"/>
+                <line x1="25" y1="95" x2="95" y2="95" stroke="#00f2fe" stroke-width="1" stroke-dasharray="3 2"/>
+            </svg>
+        </div>
 
-    <div class="actions-container">
-        <div class="btn-boost-store" id="openStoreBtn">⚡ HARDWARE LAB // NODE UPGRADES</div>
-    </div>
+        <!-- Score Counter -->
+        <div class="score-box">
+            <div class="score-val" id="shardCounter">0</div>
+            <div class="score-lbl">GRAM SHARDS DECRYPTED</div>
+        </div>
 
-    <div class="stats-bar">
-        <span id="syncStatus">SYNC: CLOUD OK</span>
-        <span id="energyCounter">ENERGY: 2000 / 2000</span>
+        <!-- Controls & Battery -->
+        <div class="bottom-section">
+            <div class="battery-card">
+                <div class="battery-meta">
+                    <span>NODE ENERGY</span>
+                    <span id="energyCounter">2000 / 2000</span>
+                </div>
+                <div class="bar-shell">
+                    <div class="bar-fill" id="energyFill"></div>
+                </div>
+            </div>
+
+            <button class="btn-lab" id="openStoreBtn">
+                <span>⚡ HARDWARE LAB // NODE UPGRADES</span>
+            </button>
+
+            <div class="status-sync" id="syncStatus">SYSTEM STATUS: LINK SECURE // 2026</div>
+        </div>
     </div>
 
     <!-- UPGRADES MODAL -->
     <div class="modal" id="storeModal">
         <div class="modal-card">
-            <div class="modal-title">PROTOCOL HARDWARE UPGRADES</div>
+            <div class="modal-title">HARDWARE LAB UPGRADES</div>
 
-            <!-- Item 1 -->
             <div class="upgrade-card">
                 <div class="up-head">
-                    <span class="up-title">⚡ TURBO RECHARGE</span>
+                    <span>⚡ TURBO RECHARGE</span>
                 </div>
-                <div class="up-desc">Увеличивает скорость восполнения энергии в 3 раза (+4 ед/сек).</div>
+                <div class="up-desc">Ускоренная подача питания: регенерация энергии в 3 раза быстрее (+4 ед/сек).</div>
                 <div class="up-buttons">
                     <button class="btn-buy" onclick="handleBuy('charge', 'ton', '0.2')">0.2 TON</button>
                     <button class="btn-buy btn-buy-stars" onclick="handleBuy('charge', 'stars', '50')">⭐ 50 STARS</button>
                 </div>
             </div>
 
-            <!-- Item 2 -->
             <div class="upgrade-card">
                 <div class="up-head">
-                    <span class="up-title">🔋 NODE CAPACITY</span>
+                    <span>🔋 EXPANDED CAPACITOR</span>
                 </div>
-                <div class="up-desc">Расширяет аккумулятор ноды (+2,000 к максимальной энергии).</div>
+                <div class="up-desc">Модуль аккумулятора: +2,000 к максимальной емкости батареи ноды.</div>
                 <div class="up-buttons">
                     <button class="btn-buy" onclick="handleBuy('battery', 'ton', '0.3')">0.3 TON</button>
                     <button class="btn-buy btn-buy-stars" onclick="handleBuy('battery', 'stars', '75')">⭐ 75 STARS</button>
                 </div>
             </div>
 
-            <!-- Item 3 -->
             <div class="upgrade-card">
                 <div class="up-head">
-                    <span class="up-title">💎 FREQUENCY OVERCLOCK</span>
+                    <span>💎 FREQUENCY OVERCLOCK</span>
                 </div>
-                <div class="up-desc">Добавляет постоянный множитель +2.0x к каждому нажатию на кристалл.</div>
+                <div class="up-desc">Разгон вычислительного чипа: постоянный бонус +2.0x к каждому тапу.</div>
                 <div class="up-buttons">
                     <button class="btn-buy" onclick="handleBuy('overclock', 'ton', '0.5')">0.5 TON</button>
                     <button class="btn-buy btn-buy-stars" onclick="handleBuy('overclock', 'stars', '120')">⭐ 120 STARS</button>
                 </div>
             </div>
 
-            <!-- Item 4 -->
             <div class="upgrade-card">
                 <div class="up-head">
-                    <span class="up-title">🤖 AUTO-DECRYPTION RIG</span>
+                    <span>🤖 AUTO-DECRYPTION RIG</span>
                 </div>
-                <div class="up-desc">Фоновая добыча: нода автономно собирает осколки пока приложение выключено.</div>
+                <div class="up-desc">Фоновый сбор: нода автономно генерирует осколки при закрытом аппе.</div>
                 <div class="up-buttons">
                     <button class="btn-buy" onclick="handleBuy('autoclicker', 'ton', '1.0')">1.0 TON</button>
                     <button class="btn-buy btn-buy-stars" onclick="handleBuy('autoclicker', 'stars', '250')">⭐ 250 STARS</button>
                 </div>
             </div>
 
-            <button class="btn-close" id="closeStoreBtn">CLOSE TERMINAL</button>
+            <button class="btn-close" id="closeStoreBtn">BACK TO VAULT</button>
         </div>
     </div>
 
     <script>
         const API_URL = "https://gram-vault-api.onrender.com";
         const RECIPIENT_WALLET = "UQALP8hAmq3qvZfEwHfgSoJWAZhM57MKos4icLJ4YaqrmEgU";
+
         const tg = window.Telegram ? window.Telegram.WebApp : null;
         if (tg) {
             tg.expand();
             tg.ready();
         }
 
-        // TON Connect UI
         const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
             manifestUrl: 'https://usdtcash24.github.io/gram-vault/tonconnect-manifest.json',
             buttonRootId: 'ton-connect-button'
@@ -345,14 +513,21 @@
 
         const shardEl = document.getElementById('shardCounter');
         const energyEl = document.getElementById('energyCounter');
+        const energyFill = document.getElementById('energyFill');
         const badgeEl = document.getElementById('nodeBadge');
-        const crystal = document.getElementById('crystalBtn');
+        const crystalWrapper = document.getElementById('crystalBtn');
         const syncStatusEl = document.getElementById('syncStatus');
 
         // Modal
         const storeModal = document.getElementById('storeModal');
         document.getElementById('openStoreBtn').addEventListener('click', () => storeModal.classList.add('active'));
         document.getElementById('closeStoreBtn').addEventListener('click', () => storeModal.classList.remove('active'));
+
+        function updateEnergyUI() {
+            energyEl.innerText = `${energy} / ${maxEnergy}`;
+            const pct = Math.max(0, Math.min(100, (energy / maxEnergy) * 100));
+            energyFill.style.width = `${pct}%`;
+        }
 
         async function loadUserData() {
             try {
@@ -364,10 +539,10 @@
                 regenSpeed = data.regen_speed || 2;
                 multiplier = data.multiplier;
                 shardEl.innerText = shards.toLocaleString();
-                energyEl.innerText = `ENERGY: ${energy} / ${maxEnergy}`;
                 badgeEl.innerText = `${data.tier} (${multiplier}x)`;
+                updateEnergyUI();
             } catch (err) {
-                badgeEl.innerText = "LOCAL NODE // OFFLINE";
+                badgeEl.innerText = "LOCAL NODE (OFFLINE)";
             }
         }
 
@@ -380,26 +555,19 @@
                 const nanoTons = Math.round(parseFloat(cost) * 1e9).toString();
                 const transaction = {
                     validUntil: Math.floor(Date.now() / 1000) + 360,
-                    messages: [
-                        {
-                            address: RECIPIENT_WALLET,
-                            amount: nanoTons
-                        }
-                    ]
+                    messages: [{ address: RECIPIENT_WALLET, amount: nanoTons }]
                 };
 
                 try {
                     await tonConnectUI.sendTransaction(transaction);
                     await applyUpgrade(upgradeType, 'ton');
-                    if (tg && tg.showPopup) tg.showPopup({ message: `Node upgraded: ${upgradeType.toUpperCase()}!` });
+                    if (tg && tg.showPopup) tg.showPopup({ message: `Upgrade activated: ${upgradeType.toUpperCase()}!` });
                 } catch (e) {
-                    if (tg && tg.showPopup) tg.showPopup({ message: "Transaction cancelled or failed" });
+                    if (tg && tg.showPopup) tg.showPopup({ message: "Transaction cancelled" });
                 }
             } else if (method === 'stars') {
-                if (tg && tg.openInvoice) {
-                    tg.showPopup({ message: `Stars payment link simulated (${cost} Stars)` });
-                } else {
-                    alert(`Stars invoice for ${cost} Stars`);
+                if (tg && tg.showPopup) {
+                    tg.showPopup({ message: `Stars payment for ${cost} Stars (Simulation)` });
                 }
                 await applyUpgrade(upgradeType, 'stars');
             }
@@ -426,7 +594,7 @@
             if (pendingClicks === 0) return;
             const toSend = pendingClicks;
             pendingClicks = 0;
-            syncStatusEl.innerText = "SYNC: SAVING...";
+            syncStatusEl.innerText = "SYSTEM STATUS: SYNCING PROTOCOL...";
 
             try {
                 await fetch(`${API_URL}/api/sync`, {
@@ -439,10 +607,10 @@
                         current_energy: energy
                     })
                 });
-                syncStatusEl.innerText = "SYNC: CLOUD OK";
+                syncStatusEl.innerText = "SYSTEM STATUS: LINK SECURE // 2026";
             } catch (e) {
                 pendingClicks += toSend;
-                syncStatusEl.innerText = "SYNC: RETRYING...";
+                syncStatusEl.innerText = "SYSTEM STATUS: RETRYING...";
             }
         }
 
@@ -451,22 +619,33 @@
         setInterval(() => {
             if (energy < maxEnergy) {
                 energy = Math.min(maxEnergy, energy + regenSpeed);
-                energyEl.innerText = `ENERGY: ${energy} / ${maxEnergy}`;
+                updateEnergyUI();
             }
         }, 1000);
 
-        crystal.addEventListener('pointerdown', () => {
+        crystalWrapper.addEventListener('pointerdown', (e) => {
             if (energy <= 0) return;
+
             const gained = Math.round(1 * multiplier);
             shards += gained;
             energy -= 1;
             pendingClicks += gained;
 
             shardEl.innerText = shards.toLocaleString();
-            energyEl.innerText = `ENERGY: ${energy} / ${maxEnergy}`;
+            updateEnergyUI();
+
+            // Spawn floating text
+            const floatText = document.createElement('div');
+            floatText.className = 'tap-effect';
+            floatText.innerText = `+${gained}`;
+            const rect = crystalWrapper.getBoundingClientRect();
+            floatText.style.left = `${e.clientX - rect.left - 10}px`;
+            floatText.style.top = `${e.clientY - rect.top - 20}px`;
+            crystalWrapper.appendChild(floatText);
+            setTimeout(() => floatText.remove(), 700);
 
             if (tg && tg.HapticFeedback) {
-                tg.HapticFeedback.impactOccurred('light');
+                tg.HapticFeedback.impactOccurred('medium');
             }
         });
 
