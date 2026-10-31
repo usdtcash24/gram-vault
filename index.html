@@ -1,655 +1,196 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
-    <title>GRAM: THE GENESIS VAULT</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700;800&family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-dark: #04070d;
-            --accent-cyan: #00f2fe;
-            --accent-blue: #4facfe;
-            --neon-glow: rgba(0, 242, 254, 0.4);
-            --card-glass: rgba(10, 20, 35, 0.7);
-            --border-glass: rgba(0, 242, 254, 0.2);
-        }
-        * {
-            box-sizing: border-box;
-            user-select: none;
-            -webkit-user-select: none;
-            -webkit-tap-highlight-color: transparent;
-            margin: 0;
-            padding: 0;
-        }
-        body {
-            background: radial-gradient(circle at 50% 20%, #0c1a2e 0%, var(--bg-dark) 85%);
-            color: #ffffff;
-            font-family: 'Chakra Petch', sans-serif;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: space-between;
-            padding: 16px 20px;
-            overflow: hidden;
-            position: relative;
-        }
-        /* Кибер-сетка на фоне */
-        body::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background-image: 
-                linear-gradient(rgba(0, 242, 254, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 242, 254, 0.03) 1px, transparent 1px);
-            background-size: 32px 32px;
-            pointer-events: none;
-            z-index: 0;
-        }
-        .container {
-            position: relative;
-            z-index: 1;
-            width: 100%;
-            max-width: 420px;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: center;
-            flex-grow: 1;
-        }
-        /* Top Navigation */
-        .top-row {
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-        }
-        .tier-badge {
-            background: linear-gradient(135deg, rgba(0, 242, 254, 0.15), rgba(79, 172, 254, 0.05));
-            border: 1px solid var(--border-glass);
-            padding: 8px 12px;
-            border-radius: 12px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px;
-            font-weight: 700;
-            color: var(--accent-cyan);
-            box-shadow: 0 0 15px rgba(0, 242, 254, 0.1);
-            backdrop-filter: blur(8px);
-            letter-spacing: 0.5px;
-        }
-        #ton-connect-button {
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 0 15px rgba(79, 172, 254, 0.2);
-        }
-        /* Header Title */
-        .hero-title {
-            text-align: center;
-            margin-top: 10px;
-        }
-        .hero-title h1 {
-            font-size: 18px;
-            font-weight: 800;
-            letter-spacing: 2.5px;
-            color: #ffffff;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
-        }
-        .hero-title p {
-            font-size: 11px;
-            font-weight: 700;
-            color: var(--accent-cyan);
-            letter-spacing: 3px;
-            margin-top: 2px;
-            text-shadow: 0 0 8px var(--neon-glow);
-        }
-        /* Crystal Area */
-        .crystal-wrapper {
-            position: relative;
-            width: 240px;
-            height: 240px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 10px 0;
-            cursor: pointer;
-        }
-        .crystal-glow {
-            position: absolute;
-            width: 180px;
-            height: 180px;
-            background: radial-gradient(circle, rgba(0, 242, 254, 0.3) 0%, transparent 70%);
-            border-radius: 50%;
-            animation: pulse-glow 3s infinite ease-in-out;
-            pointer-events: none;
-        }
-        .crystal-img {
-            width: 170px;
-            height: 170px;
-            transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            filter: drop-shadow(0 0 25px rgba(0, 242, 254, 0.6));
-            animation: float-anim 4s infinite ease-in-out;
-        }
-        .crystal-wrapper:active .crystal-img {
-            transform: scale(0.92);
-        }
-        /* Counter Section */
-        .score-box {
-            text-align: center;
-            margin-bottom: 8px;
-        }
-        .score-val {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 42px;
-            font-weight: 800;
-            letter-spacing: -1px;
-            background: linear-gradient(180deg, #ffffff 40%, #b2ebf2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 0 15px rgba(0, 242, 254, 0.4));
-        }
-        .score-lbl {
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: 2px;
-            color: #64748b;
-            margin-top: 4px;
-        }
-        /* Click Float Text */
-        .tap-effect {
-            position: absolute;
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 800;
-            font-size: 24px;
-            color: #ffffff;
-            text-shadow: 0 0 10px var(--accent-cyan);
-            pointer-events: none;
-            animation: tap-float 0.7s forwards ease-out;
-            z-index: 10;
-        }
-        /* Bottom Actions & Battery */
-        .bottom-section {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        /* Modern Neon Energy Bar */
-        .battery-card {
-            background: var(--card-glass);
-            border: 1px solid var(--border-glass);
-            border-radius: 14px;
-            padding: 10px 14px;
-            backdrop-filter: blur(10px);
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-        .battery-meta {
-            display: flex;
-            justify-content: space-between;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px;
-            font-weight: 600;
-            color: #94a3b8;
-        }
-        .battery-meta span:last-child {
-            color: var(--accent-cyan);
-        }
-        .bar-shell {
-            width: 100%;
-            height: 8px;
-            background: rgba(15, 23, 42, 0.8);
-            border-radius: 6px;
-            overflow: hidden;
-            border: 1px solid rgba(0, 242, 254, 0.1);
-        }
-        .bar-fill {
-            height: 100%;
-            width: 100%;
-            background: linear-gradient(90deg, #0284c7, var(--accent-cyan));
-            box-shadow: 0 0 10px var(--accent-cyan);
-            border-radius: 6px;
-            transition: width 0.3s ease;
-        }
-        /* Hardware Lab Button */
-        .btn-lab {
-            width: 100%;
-            background: linear-gradient(135deg, #0284c7 0%, #00f2fe 100%);
-            border: none;
-            border-radius: 14px;
-            padding: 15px;
-            font-family: 'Chakra Petch', sans-serif;
-            font-size: 14px;
-            font-weight: 800;
-            letter-spacing: 1.5px;
-            color: #04070d;
-            box-shadow: 0 4px 20px rgba(0, 242, 254, 0.35);
-            cursor: pointer;
-            transition: opacity 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        .btn-lab:active {
-            opacity: 0.85;
-        }
-        .status-sync {
-            text-align: center;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 10px;
-            color: #475569;
-            letter-spacing: 1px;
-        }
-        /* Modal UPGRADE STORE */
-        .modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(2, 6, 12, 0.92);
-            backdrop-filter: blur(12px);
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            padding: 16px;
-        }
-        .modal.active {
-            display: flex;
-        }
-        .modal-card {
-            background: #091322;
-            border: 1px solid var(--border-glass);
-            border-radius: 20px;
-            width: 100%;
-            max-width: 380px;
-            max-height: 85vh;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-            overflow-y: auto;
-            box-shadow: 0 0 35px rgba(0, 242, 254, 0.15);
-        }
-        .modal-card::-webkit-scrollbar {
-            display: none;
-        }
-        .modal-title {
-            font-size: 16px;
-            font-weight: 800;
-            text-align: center;
-            color: var(--accent-cyan);
-            letter-spacing: 1.5px;
-        }
-        .upgrade-card {
-            background: rgba(14, 27, 45, 0.7);
-            border: 1px solid rgba(0, 242, 254, 0.15);
-            border-radius: 14px;
-            padding: 12px 14px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        .up-head {
-            font-size: 13px;
-            font-weight: 700;
-            color: #ffffff;
-            display: flex;
-            justify-content: space-between;
-        }
-        .up-desc {
-            font-size: 11px;
-            color: #94a3b8;
-            line-height: 1.4;
-        }
-        .up-buttons {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-top: 4px;
-        }
-        .btn-buy {
-            background: rgba(0, 242, 254, 0.1);
-            border: 1px solid rgba(0, 242, 254, 0.35);
-            color: var(--accent-cyan);
-            font-family: 'JetBrains Mono', monospace;
-            padding: 8px;
-            font-size: 11px;
-            font-weight: 700;
-            border-radius: 8px;
-            cursor: pointer;
-            text-align: center;
-        }
-        .btn-buy-stars {
-            border-color: rgba(251, 191, 36, 0.4);
-            color: #fbbf24;
-            background: rgba(251, 191, 36, 0.1);
-        }
-        .btn-close {
-            background: #1e293b;
-            border: none;
-            color: #ffffff;
-            padding: 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            cursor: pointer;
-            margin-top: 4px;
+import os
+import sqlite3
+import uvicorn
+import httpx
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+
+app = FastAPI(title="GRAM Genesis Vault API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+DB_PATH = "vault.db"
+MY_WALLET = "UQALP8hAmq3qvZfEwHfgSoJWAZhM57MKos4icLJ4YaqrmEgU"
+
+UPGRADE_PRICES = {
+    "charge": 0.2,
+    "battery": 0.3,
+    "overclock": 0.5,
+    "autoclicker": 1.0
+}
+
+def init_db():
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            user_id INTEGER PRIMARY KEY,
+            username TEXT,
+            shards INTEGER DEFAULT 0,
+            energy INTEGER DEFAULT 2000,
+            max_energy INTEGER DEFAULT 2000,
+            regen_speed INTEGER DEFAULT 2,
+            tier TEXT DEFAULT 'MODERN',
+            multiplier REAL DEFAULT 1.0,
+            has_autoclicker INTEGER DEFAULT 0,
+            last_sync TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS processed_txs (
+            tx_hash TEXT PRIMARY KEY,
+            user_id INTEGER,
+            upgrade_type TEXT,
+            amount REAL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+init_db()
+
+class SyncPayload(BaseModel):
+    user_id: int
+    username: str = ""
+    added_shards: int
+    current_energy: int
+
+class VerifyPayload(BaseModel):
+    user_id: int
+    upgrade_type: str
+
+def calc_tier(user_id: int):
+    if user_id < 200_000_000:
+        return "GENESIS NODE (Tier 1)", 4.0
+    elif user_id < 800_000_000:
+        return "VINTAGE NODE (Tier 2)", 2.5
+    return "MODERN NODE", 1.0
+
+@app.get("/api/user/{user_id}")
+def get_user(user_id: int):
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT shards, energy, max_energy, regen_speed, tier, multiplier, has_autoclicker 
+        FROM users WHERE user_id = ?
+    """, (user_id,))
+    row = cur.fetchone()
+    conn.close()
+
+    if not row:
+        tier, mult = calc_tier(user_id)
+        conn = sqlite3.connect(DB_PATH)
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO users (user_id, shards, energy, max_energy, regen_speed, tier, multiplier, has_autoclicker) 
+            VALUES (?, 0, 2000, 2000, 2, ?, ?, 0)
+        """, (user_id, tier, mult))
+        conn.commit()
+        conn.close()
+        return {
+            "user_id": user_id, "shards": 0, "energy": 2000, "max_energy": 2000,
+            "regen_speed": 2, "tier": tier, "multiplier": mult, "has_autoclicker": 0
         }
 
-        /* Animations */
-        @keyframes float-anim {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-8px) rotate(1.5deg); }
-        }
-        @keyframes pulse-glow {
-            0%, 100% { opacity: 0.5; transform: scale(1); }
-            50% { opacity: 0.85; transform: scale(1.15); }
-        }
-        @keyframes tap-float {
-            0% { opacity: 1; transform: translateY(0px) scale(1); }
-            100% { opacity: 0; transform: translateY(-70px) scale(1.2); }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <!-- Top Stats Row -->
-        <div class="top-row">
-            <div class="tier-badge" id="nodeBadge">INITIALIZING...</div>
-            <div id="ton-connect-button"></div>
-        </div>
+    return {
+        "user_id": user_id, "shards": row[0], "energy": row[1], "max_energy": row[2],
+        "regen_speed": row[3], "tier": row[4], "multiplier": row[5], "has_autoclicker": row[6]
+    }
 
-        <!-- Title -->
-        <div class="hero-title">
-            <h1>GRAM: PROTOCOL</h1>
-            <p>GENESIS RECOVERY VAULT</p>
-        </div>
+@app.post("/api/sync")
+def sync_clicks(data: SyncPayload):
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute(
+        "UPDATE users SET shards = shards + ?, energy = ?, last_sync = CURRENT_TIMESTAMP WHERE user_id = ?",
+        (data.added_shards, data.current_energy, data.user_id)
+    )
+    conn.commit()
+    conn.close()
+    return {"status": "ok"}
 
-        <!-- 3D Neon Crystal -->
-        <div class="crystal-wrapper" id="crystalBtn">
-            <div class="crystal-glow"></div>
-            <!-- Рендеренный киберпанк-кристалл с мягкими гранями и отражением -->
-            <svg class="crystal-img" viewBox="0 0 120 160" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                    <linearGradient id="facetA" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stop-color="#00f2fe" stop-opacity="0.8"/>
-                        <stop offset="100%" stop-color="#0284c7" stop-opacity="0.2"/>
-                    </linearGradient>
-                    <linearGradient id="facetB" x1="100%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9"/>
-                        <stop offset="100%" stop-color="#00f2fe" stop-opacity="0.3"/>
-                    </linearGradient>
-                    <linearGradient id="facetC" x1="50%" y1="0%" x2="50%" y2="100%">
-                        <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.6"/>
-                        <stop offset="100%" stop-color="#0c4a6e" stop-opacity="0.7"/>
-                    </linearGradient>
-                </defs>
-                <!-- Top Cap Facets -->
-                <polygon points="60,10 95,45 60,60" fill="url(#facetB)"/>
-                <polygon points="60,10 25,45 60,60" fill="url(#facetA)"/>
-                <!-- Central Body Facets -->
-                <polygon points="25,45 60,60 60,110 25,95" fill="url(#facetC)"/>
-                <polygon points="95,45 60,60 60,110 95,95" fill="url(#facetA)"/>
-                <!-- Bottom Tip Facets -->
-                <polygon points="25,95 60,110 60,150" fill="url(#facetA)"/>
-                <polygon points="95,95 60,110 60,150" fill="url(#facetB)"/>
-                <!-- Neon Glowing Wireframe Overlays -->
-                <polygon points="60,10 95,45 95,95 60,150 25,95 25,45" stroke="#00f2fe" stroke-width="2" fill="none"/>
-                <line x1="60" y1="10" x2="60" y2="150" stroke="#ffffff" stroke-width="1.5" stroke-opacity="0.7"/>
-                <line x1="25" y1="45" x2="95" y2="45" stroke="#00f2fe" stroke-width="1" stroke-dasharray="3 2"/>
-                <line x1="25" y1="95" x2="95" y2="95" stroke="#00f2fe" stroke-width="1" stroke-dasharray="3 2"/>
-            </svg>
-        </div>
+@app.post("/api/verify-ton-payment")
+async def verify_ton_payment(data: VerifyPayload):
+    expected_price = UPGRADE_PRICES.get(data.upgrade_type)
+    if not expected_price:
+        raise HTTPException(status_code=400, detail="Invalid upgrade type")
 
-        <!-- Score Counter -->
-        <div class="score-box">
-            <div class="score-val" id="shardCounter">0</div>
-            <div class="score-lbl">GRAM SHARDS DECRYPTED</div>
-        </div>
+    expected_comment = f"upg_{data.upgrade_type}_{data.user_id}"
 
-        <!-- Controls & Battery -->
-        <div class="bottom-section">
-            <div class="battery-card">
-                <div class="battery-meta">
-                    <span>NODE ENERGY</span>
-                    <span id="energyCounter">2000 / 2000</span>
-                </div>
-                <div class="bar-shell">
-                    <div class="bar-fill" id="energyFill"></div>
-                </div>
-            </div>
+    # Запрашиваем последние 15 транзакций кошелька через открытый API toncenter
+    async with httpx.AsyncClient() as client:
+        try:
+            res = await client.get(
+                "https://toncenter.com/api/v2/getTransactions",
+                params={"address": MY_WALLET, "limit": 15},
+                timeout=10.0
+            )
+            res_data = res.json()
+        except Exception as e:
+            raise HTTPException(status_code=502, detail="Failed to connect to TON network")
 
-            <button class="btn-lab" id="openStoreBtn">
-                <span>⚡ HARDWARE LAB // NODE UPGRADES</span>
-            </button>
+    if not res_data.get("ok"):
+        raise HTTPException(status_code=502, detail="TON API response error")
 
-            <div class="status-sync" id="syncStatus">SYSTEM STATUS: LINK SECURE // 2026</div>
-        </div>
-    </div>
+    transactions = res_data.get("result", [])
+    matched_tx = None
 
-    <!-- UPGRADES MODAL -->
-    <div class="modal" id="storeModal">
-        <div class="modal-card">
-            <div class="modal-title">HARDWARE LAB UPGRADES</div>
+    for tx in transactions:
+        in_msg = tx.get("in_msg", {})
+        msg_data = in_msg.get("message", "")
+        value_nano = int(in_msg.get("value", 0))
+        value_ton = value_nano / 1e9
 
-            <div class="upgrade-card">
-                <div class="up-head">
-                    <span>⚡ TURBO RECHARGE</span>
-                </div>
-                <div class="up-desc">Ускоренная подача питания: регенерация энергии в 3 раза быстрее (+4 ед/сек).</div>
-                <div class="up-buttons">
-                    <button class="btn-buy" onclick="handleBuy('charge', 'ton', '0.2')">0.2 TON</button>
-                    <button class="btn-buy btn-buy-stars" onclick="handleBuy('charge', 'stars', '50')">⭐ 50 STARS</button>
-                </div>
-            </div>
+        # Сверяем комментарий и сумму (допускаем погрешность в пределах комиссии)
+        if expected_comment in msg_data and value_ton >= (expected_price * 0.98):
+            tx_id = tx.get("transaction_id", {}).get("hash")
+            matched_tx = (tx_id, value_ton)
+            break
 
-            <div class="upgrade-card">
-                <div class="up-head">
-                    <span>🔋 EXPANDED CAPACITOR</span>
-                </div>
-                <div class="up-desc">Модуль аккумулятора: +2,000 к максимальной емкости батареи ноды.</div>
-                <div class="up-buttons">
-                    <button class="btn-buy" onclick="handleBuy('battery', 'ton', '0.3')">0.3 TON</button>
-                    <button class="btn-buy btn-buy-stars" onclick="handleBuy('battery', 'stars', '75')">⭐ 75 STARS</button>
-                </div>
-            </div>
+    if not matched_tx:
+        raise HTTPException(
+            status_code=404, 
+            detail="Транзакция пока не подтверждена блокчейном. Подождите 10-15 секунд."
+        )
 
-            <div class="upgrade-card">
-                <div class="up-head">
-                    <span>💎 FREQUENCY OVERCLOCK</span>
-                </div>
-                <div class="up-desc">Разгон вычислительного чипа: постоянный бонус +2.0x к каждому тапу.</div>
-                <div class="up-buttons">
-                    <button class="btn-buy" onclick="handleBuy('overclock', 'ton', '0.5')">0.5 TON</button>
-                    <button class="btn-buy btn-buy-stars" onclick="handleBuy('overclock', 'stars', '120')">⭐ 120 STARS</button>
-                </div>
-            </div>
+    tx_hash, confirmed_amount = matched_tx
 
-            <div class="upgrade-card">
-                <div class="up-head">
-                    <span>🤖 AUTO-DECRYPTION RIG</span>
-                </div>
-                <div class="up-desc">Фоновый сбор: нода автономно генерирует осколки при закрытом аппе.</div>
-                <div class="up-buttons">
-                    <button class="btn-buy" onclick="handleBuy('autoclicker', 'ton', '1.0')">1.0 TON</button>
-                    <button class="btn-buy btn-buy-stars" onclick="handleBuy('autoclicker', 'stars', '250')">⭐ 250 STARS</button>
-                </div>
-            </div>
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
 
-            <button class="btn-close" id="closeStoreBtn">BACK TO VAULT</button>
-        </div>
-    </div>
+    # Проверка на повторное использование той же транзакции
+    cur.execute("SELECT tx_hash FROM processed_txs WHERE tx_hash = ?", (tx_hash,))
+    if cur.fetchone():
+        conn.close()
+        raise HTTPException(status_code=400, detail="Эта транзакция уже была активирована!")
 
-    <script>
-        const API_URL = "https://gram-vault-api.onrender.com";
-        const RECIPIENT_WALLET = "UQALP8hAmq3qvZfEwHfgSoJWAZhM57MKos4icLJ4YaqrmEgU";
+    # Применяем улучшение
+    if data.upgrade_type == "battery":
+        cur.execute("UPDATE users SET max_energy = max_energy + 2000 WHERE user_id = ?", (data.user_id,))
+    elif data.upgrade_type == "charge":
+        cur.execute("UPDATE users SET regen_speed = regen_speed + 4 WHERE user_id = ?", (data.user_id,))
+    elif data.upgrade_type == "overclock":
+        cur.execute("UPDATE users SET multiplier = multiplier + 2.0 WHERE user_id = ?", (data.user_id,))
+    elif data.upgrade_type == "autoclicker":
+        cur.execute("UPDATE users SET has_autoclicker = 1 WHERE user_id = ?", (data.user_id,))
 
-        const tg = window.Telegram ? window.Telegram.WebApp : null;
-        if (tg) {
-            tg.expand();
-            tg.ready();
-        }
+    cur.execute(
+        "INSERT INTO processed_txs (tx_hash, user_id, upgrade_type, amount) VALUES (?, ?, ?, ?)",
+        (tx_hash, data.user_id, data.upgrade_type, confirmed_amount)
+    )
+    conn.commit()
+    conn.close()
 
-        const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-            manifestUrl: 'https://usdtcash24.github.io/gram-vault/tonconnect-manifest.json',
-            buttonRootId: 'ton-connect-button'
-        });
+    return {"status": "success", "upgrade": data.upgrade_type, "tx_hash": tx_hash}
 
-        const user = tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user : { id: 777000, first_name: "Operator" };
-        let shards = 0;
-        let energy = 2000;
-        let maxEnergy = 2000;
-        let regenSpeed = 2;
-        let multiplier = 1.0;
-        let pendingClicks = 0;
-
-        const shardEl = document.getElementById('shardCounter');
-        const energyEl = document.getElementById('energyCounter');
-        const energyFill = document.getElementById('energyFill');
-        const badgeEl = document.getElementById('nodeBadge');
-        const crystalWrapper = document.getElementById('crystalBtn');
-        const syncStatusEl = document.getElementById('syncStatus');
-
-        // Modal
-        const storeModal = document.getElementById('storeModal');
-        document.getElementById('openStoreBtn').addEventListener('click', () => storeModal.classList.add('active'));
-        document.getElementById('closeStoreBtn').addEventListener('click', () => storeModal.classList.remove('active'));
-
-        function updateEnergyUI() {
-            energyEl.innerText = `${energy} / ${maxEnergy}`;
-            const pct = Math.max(0, Math.min(100, (energy / maxEnergy) * 100));
-            energyFill.style.width = `${pct}%`;
-        }
-
-        async function loadUserData() {
-            try {
-                const res = await fetch(`${API_URL}/api/user/${user.id}`);
-                const data = await res.json();
-                shards = data.shards;
-                energy = data.energy;
-                maxEnergy = data.max_energy || 2000;
-                regenSpeed = data.regen_speed || 2;
-                multiplier = data.multiplier;
-                shardEl.innerText = shards.toLocaleString();
-                badgeEl.innerText = `${data.tier} (${multiplier}x)`;
-                updateEnergyUI();
-            } catch (err) {
-                badgeEl.innerText = "LOCAL NODE (OFFLINE)";
-            }
-        }
-
-        async function handleBuy(upgradeType, method, cost) {
-            if (method === 'ton') {
-                if (!tonConnectUI.connected) {
-                    await tonConnectUI.openModal();
-                    return;
-                }
-                const nanoTons = Math.round(parseFloat(cost) * 1e9).toString();
-                const transaction = {
-                    validUntil: Math.floor(Date.now() / 1000) + 360,
-                    messages: [{ address: RECIPIENT_WALLET, amount: nanoTons }]
-                };
-
-                try {
-                    await tonConnectUI.sendTransaction(transaction);
-                    await applyUpgrade(upgradeType, 'ton');
-                    if (tg && tg.showPopup) tg.showPopup({ message: `Upgrade activated: ${upgradeType.toUpperCase()}!` });
-                } catch (e) {
-                    if (tg && tg.showPopup) tg.showPopup({ message: "Transaction cancelled" });
-                }
-            } else if (method === 'stars') {
-                if (tg && tg.showPopup) {
-                    tg.showPopup({ message: `Stars payment for ${cost} Stars (Simulation)` });
-                }
-                await applyUpgrade(upgradeType, 'stars');
-            }
-        }
-
-        async function applyUpgrade(upgradeType, method) {
-            try {
-                await fetch(`${API_URL}/api/buy-upgrade`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        user_id: user.id,
-                        upgrade_type: upgradeType,
-                        payment_method: method
-                    })
-                });
-                await loadUserData();
-            } catch (e) {
-                console.error(e);
-            }
-        }
-
-        async function syncClicks() {
-            if (pendingClicks === 0) return;
-            const toSend = pendingClicks;
-            pendingClicks = 0;
-            syncStatusEl.innerText = "SYSTEM STATUS: SYNCING PROTOCOL...";
-
-            try {
-                await fetch(`${API_URL}/api/sync`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        user_id: user.id,
-                        username: user.username || user.first_name || "",
-                        added_shards: toSend,
-                        current_energy: energy
-                    })
-                });
-                syncStatusEl.innerText = "SYSTEM STATUS: LINK SECURE // 2026";
-            } catch (e) {
-                pendingClicks += toSend;
-                syncStatusEl.innerText = "SYSTEM STATUS: RETRYING...";
-            }
-        }
-
-        setInterval(syncClicks, 2500);
-
-        setInterval(() => {
-            if (energy < maxEnergy) {
-                energy = Math.min(maxEnergy, energy + regenSpeed);
-                updateEnergyUI();
-            }
-        }, 1000);
-
-        crystalWrapper.addEventListener('pointerdown', (e) => {
-            if (energy <= 0) return;
-
-            const gained = Math.round(1 * multiplier);
-            shards += gained;
-            energy -= 1;
-            pendingClicks += gained;
-
-            shardEl.innerText = shards.toLocaleString();
-            updateEnergyUI();
-
-            // Spawn floating text
-            const floatText = document.createElement('div');
-            floatText.className = 'tap-effect';
-            floatText.innerText = `+${gained}`;
-            const rect = crystalWrapper.getBoundingClientRect();
-            floatText.style.left = `${e.clientX - rect.left - 10}px`;
-            floatText.style.top = `${e.clientY - rect.top - 20}px`;
-            crystalWrapper.appendChild(floatText);
-            setTimeout(() => floatText.remove(), 700);
-
-            if (tg && tg.HapticFeedback) {
-                tg.HapticFeedback.impactOccurred('medium');
-            }
-        });
-
-        loadUserData();
-    </script>
-</body>
-</html>
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 10000))
+    uvicorn.run("server:app", host="0.0.0.0", port=port)
